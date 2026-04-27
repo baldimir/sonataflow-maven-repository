@@ -70,7 +70,7 @@ jobs:
 #        working-directory: kogito-apps
 
       - name: Build and publish Drools artifacts
-        run: mvn --batch-mode clean deploy -s ./.github/configs/settings.xml -DskipTests -Dproductized
+        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
         working-directory: drools
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
