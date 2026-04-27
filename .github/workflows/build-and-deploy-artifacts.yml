@@ -69,19 +69,19 @@ jobs:
         working-directory: kogito-apps
 
       - name: Build and publish Drools artifacts
-        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/
+        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/sonataflow-maven-repository
         working-directory: drools
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish kogito-runtimes artifacts
-        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/
+        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/sonataflow-maven-repository
         working-directory: kogito-runtimes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish kogito-apps artifacts
-        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/
+        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/sonataflow-maven-repository
         working-directory: kogito-apps
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
