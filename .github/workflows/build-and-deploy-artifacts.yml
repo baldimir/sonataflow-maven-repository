@@ -6,7 +6,7 @@ on:
         description: "Sonataflow version to be built and published."
         type: string
         required: false
-        default: 111111-SNAPSHOT
+        default: 111-SNAPSHOT
 
 permissions:
   contents: read
