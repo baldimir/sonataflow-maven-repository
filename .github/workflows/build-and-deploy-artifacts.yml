@@ -1,0 +1,83 @@
+name: Build and publish jars to the GitHub Maven Repository
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  SONATAFLOW_VERSION: 111111-SNAPSHOT
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Checkout Drools
+        uses: actions/checkout@v6
+        with:
+          repository: kiegroup/drools
+          path: drools
+
+      - name: Checkout kogito-runtimes
+        uses: actions/checkout@v6
+        with:
+          repository: kiegroup/kogito-runtimes
+          path: kogito-runtimes
+
+      - name: Checkout kogito-apps
+        uses: actions/checkout@v6
+        with:
+          repository: kiegroup/kogito-apps
+          path: kogito-apps
+
+      - name: Checkout kubesmarts/kie-tools
+        uses: actions/checkout@v6
+        with:
+          repository: kiegroup/drools
+          path: kie-tools
+
+      # TODO - this can be removed when the SNAPSHOT version is updated in the repositories.
+      - name: Update Drools version
+        run: |
+          find ./ -name pom.xml -exec sed -i "s/999-SNAPSHOT/${SONATAFLOW_VERSION}/g" {} \;
+        working-directory: drools
+
+      # TODO - this can be removed when the SNAPSHOT version is updated in the repositories.
+      - name: Update kogito-runtimes version
+        run: |
+          find ./ -name pom.xml -exec sed -i "s/999-SNAPSHOT/${SONATAFLOW_VERSION}/g" {} \;
+        working-directory: kogito-runtimes
+
+
+      # TODO - this can be removed when the SNAPSHOT version is updated in the repositories.
+      - name: Update kogito-apps version
+        run: |
+          find ./ -name pom.xml -exec sed -i "s/999-SNAPSHOT/${SONATAFLOW_VERSION}/g" {} \;
+        working-directory: kogito-apps
+
+      - name: Build and publish Drools artifacts
+        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/
+        working-directory: drools
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish kogito-runtimes artifacts
+        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/
+        working-directory: kogito-runtimes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish kogito-apps artifacts
+        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/
+        working-directory: kogito-apps
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # TODO - add kie-tools
