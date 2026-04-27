@@ -12,9 +12,6 @@ permissions:
   contents: read
   packages: write
 
-env:
-  SONATAFLOW_VERSION: 111111-SNAPSHOT
-
 jobs:
   publish:
     runs-on: ubuntu-latest
