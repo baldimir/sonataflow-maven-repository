@@ -51,9 +51,10 @@ jobs:
 #          path: kie-tools
 
       # TODO - this can be removed when the SNAPSHOT version is updated in the repositories.
-      - name: Update Drools version
+      - name: Update Drools version and prepare repository
         run: |
           find ./ -name pom.xml -exec sed -i "s/999-SNAPSHOT/${SONATAFLOW_VERSION}/g" {} \;
+          ./productized/remove_modules.sh ./productized/modules
         working-directory: drools
 
 #      # TODO - this can be removed when the SNAPSHOT version is updated in the repositories.
