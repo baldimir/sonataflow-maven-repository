@@ -1,6 +1,12 @@
-name: Build and publish jars to the GitHub Maven Repository
+name: Build and publish SonataFlow jars to the GitHub Maven Repository
 on:
   workflow_dispatch:
+    inputs:
+      SONATAFLOW_VERSION:
+        description: "Sonataflow version to be built and published."
+        type: string
+        required: false
+        default: 111111-SNAPSHOT
 
 permissions:
   contents: read
