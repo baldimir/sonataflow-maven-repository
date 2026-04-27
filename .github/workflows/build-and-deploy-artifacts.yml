@@ -87,3 +87,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # TODO - add kie-tools
+      # TODO - this probably needs a custom settings.xml until the repositories are not updated with new <repositories> configuration.
