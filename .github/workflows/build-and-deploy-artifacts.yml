@@ -28,7 +28,7 @@ jobs:
       - name: Checkout Drools
         uses: actions/checkout@v6
         with:
-          repository: kiegroup/drools
+          repository: baldimir/drools
           path: drools
           ref: main-kiegroup
 
