@@ -53,7 +53,7 @@ jobs:
       # TODO - this can be removed when the SNAPSHOT version is updated in the repositories.
       - name: Update Drools version and prepare repository
         run: |
-          ../scripts/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
+          python3 ../scripts/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
           ./productized/remove_modules.sh ./productized/modules
         working-directory: drools
 
