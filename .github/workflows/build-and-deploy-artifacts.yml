@@ -70,7 +70,7 @@ jobs:
 #        working-directory: kogito-apps
 
       - name: Build and publish Drools artifacts
-        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/sonataflow-maven-repository
+        run: mvn --batch-mode clean deploy -DskipTests -Dproductized
         working-directory: drools
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
