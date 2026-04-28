@@ -74,12 +74,6 @@ You can also configure the repository directly in your project's `pom.xml`:
 
 ## Available Artifacts
 
-The repository contains artifacts from the following projects:
-
-- **org.drools** - Drools rule engine components
-- **org.kie.kogito** - Kogito runtime and API artifacts
-- **org.kie** - KIE (Knowledge Is Everything) platform components
-
 To browse available packages, visit: https://github.com/kubesmarts/sonataflow-maven-repository/packages
 
 ## Building and Deploying
