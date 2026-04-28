@@ -17,6 +17,11 @@ on:
         type: string
         required: false
         default: kubesmarts
+      BRANCH_TO_BUILD:
+        description: "Branch from which the artifacts should be published."
+        type: string
+        required: false
+        default: main
       MAVEN_REPOSITORY_URL:
         description: "URL of the Maven repository where artifacts will be deployed."
         type: string
@@ -55,27 +60,28 @@ jobs:
         with:
           repository: ${{ inputs.GITHUB_ORGANISATION }}/drools
           path: drools
-          ref: main-kiegroup
+          ref: ${{ inputs.BRANCH_TO_BUILD }}
 
       - name: Checkout kogito-runtimes
         uses: actions/checkout@v6
         with:
           repository: ${{ inputs.GITHUB_ORGANISATION }}/kogito-runtimes
           path: kogito-runtimes
-          ref: main-kiegroup
+          ref: ${{ inputs.BRANCH_TO_BUILD }}
 
       - name: Checkout kogito-apps
         uses: actions/checkout@v6
         with:
           repository: ${{ inputs.GITHUB_ORGANISATION }}/kogito-apps
           path: kogito-apps
-          ref: main-kiegroup
+          ref: ${{ inputs.BRANCH_TO_BUILD }}
 
 #      - name: Checkout kubesmarts/kie-tools
 #        uses: actions/checkout@v6
 #        with:
 #          repository: ${{ inputs.GITHUB_ORGANISATION_KIE_TOOLS }}/kie-tools
 #          path: kie-tools
+#          ref: ${{ inputs.BRANCH_TO_BUILD }}
 
       - name: Update Drools version and prepare repository
         run: |
