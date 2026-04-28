@@ -106,11 +106,11 @@ jobs:
           python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
         working-directory: kie-tools
 
-      - name: Build and publish Drools artifacts
-        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
-        working-directory: drools
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Build and publish Drools artifacts
+#        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
+#        working-directory: drools
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish kogito-runtimes artifacts
         run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized

@@ -24,20 +24,10 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import os
+import re
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-
-
-RESET_TAGS = (
-    "<properties>",
-    "<modules>",
-    "<build>",
-    "<profiles>",
-    "<name>",
-    "<description>",
-    "<packaging>",
-)
 
 
 def parse_args() -> argparse.Namespace:
@@ -130,6 +120,7 @@ def update_pom_content(content: str, new_version: str, is_root_pom: bool = False
     in_dependency_mgmt = False
     in_plugins = False
     in_plugin_mgmt = False
+    in_build = False
     in_project = False
     module_version_updated = False
 
@@ -171,10 +162,14 @@ def update_pom_content(content: str, new_version: str, is_root_pom: bool = False
         elif "</pluginManagement>" in line:
             in_plugin_mgmt = False
 
+        if "<build>" in line:
+            in_build = True
+        elif "</build>" in line:
+            in_build = False
+
         # Update parent version - replace ANY version (skip for root pom.xml)
         if in_parent and "<version>" in line and not is_root_pom:
             # Extract the version value and replace it, preserving formatting
-            import re
             match = re.search(r'<version>([^<]+)</version>', line)
             if match:
                 old_version_value = match.group(1)
@@ -183,7 +178,7 @@ def update_pom_content(content: str, new_version: str, is_root_pom: bool = False
                 if line != original_line:
                     changes_made += 1
         # Update module version - the first <version> tag directly inside <project>
-        # that is NOT in parent, dependencies, dependencyManagement, plugins, or pluginManagement
+        # that is NOT in parent, dependencies, dependencyManagement, plugins, pluginManagement, or build
         elif (
             in_project
             and not module_version_updated
@@ -192,10 +187,10 @@ def update_pom_content(content: str, new_version: str, is_root_pom: bool = False
             and not in_dependency_mgmt
             and not in_plugins
             and not in_plugin_mgmt
+            and not in_build
             and "<version>" in line
         ):
             # Extract the version value and replace it, preserving formatting
-            import re
             match = re.search(r'<version>([^<]+)</version>', line)
             if match:
                 old_version_value = match.group(1)

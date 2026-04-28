@@ -368,6 +368,135 @@ else
 fi
 
 echo ""
+echo "=========================================="
+echo "Test 4: Build section version exclusion"
+echo "=========================================="
+echo ""
+
+# Create a test pom.xml with version tags in <build> section
+mkdir -p "$TEST_DIR/build-test"
+cat > "$TEST_DIR/build-test/pom.xml" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>drools-parent</artifactId>
+    <version>9.104.0</version>
+  </parent>
+
+  <groupId>org.kie</groupId>
+  <artifactId>build-test-module</artifactId>
+  <version>9.104.0</version>
+  <packaging>jar</packaging>
+
+  <name>Build Test Module</name>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <source>11</source>
+          <target>11</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0</version>
+      </plugin>
+    </plugins>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh</artifactId>
+        <version>3.5.2</version>
+      </extension>
+    </extensions>
+  </build>
+</project>
+EOF
+
+echo "Build test pom.xml created."
+echo ""
+echo "Original content:"
+echo "=================="
+cat "$TEST_DIR/build-test/pom.xml"
+echo ""
+echo "=================="
+echo ""
+
+# Run the version update
+echo "Running version update to: 9.105.0-SNAPSHOT"
+echo ""
+
+(
+    cd "$TEST_DIR" &&
+    python3 ../update-maven-versions.py 9.105.0-SNAPSHOT
+)
+
+echo ""
+echo "Updated content:"
+echo "=================="
+cat "$TEST_DIR/build-test/pom.xml"
+echo ""
+echo "=================="
+echo ""
+
+# Verify the results
+echo "Verification:"
+echo "============="
+
+# Check parent version was updated
+if grep -A 3 '<parent>' "$TEST_DIR/build-test/pom.xml" | grep -q '9.105.0-SNAPSHOT'; then
+    echo "✓ Parent version updated correctly"
+else
+    echo "✗ FAILED: Parent version not updated"
+    rm -rf "$TEST_DIR"
+    exit 1
+fi
+
+# Check module version was updated
+if grep -A 1 '<artifactId>build-test-module</artifactId>' "$TEST_DIR/build-test/pom.xml" | grep -q '9.105.0-SNAPSHOT'; then
+    echo "✓ Module version updated correctly"
+else
+    echo "✗ FAILED: Module version not updated"
+    rm -rf "$TEST_DIR"
+    exit 1
+fi
+
+# Check maven-compiler-plugin version was NOT updated (inside <build>)
+if grep -A 1 '<artifactId>maven-compiler-plugin</artifactId>' "$TEST_DIR/build-test/pom.xml" | grep -q '3.11.0'; then
+    echo "✓ Plugin version in <build> NOT updated (correct)"
+else
+    echo "✗ FAILED: Plugin version in <build> was incorrectly updated"
+    rm -rf "$TEST_DIR"
+    exit 1
+fi
+
+# Check maven-surefire-plugin version was NOT updated (inside <build>)
+if grep -A 1 '<artifactId>maven-surefire-plugin</artifactId>' "$TEST_DIR/build-test/pom.xml" | grep -q '3.0.0'; then
+    echo "✓ Surefire plugin version in <build> NOT updated (correct)"
+else
+    echo "✗ FAILED: Surefire plugin version in <build> was incorrectly updated"
+    rm -rf "$TEST_DIR"
+    exit 1
+fi
+
+# Check wagon-ssh extension version was NOT updated (inside <build>)
+if grep -A 1 '<artifactId>wagon-ssh</artifactId>' "$TEST_DIR/build-test/pom.xml" | grep -q '3.5.2'; then
+    echo "✓ Extension version in <build> NOT updated (correct)"
+else
+    echo "✗ FAILED: Extension version in <build> was incorrectly updated"
+    rm -rf "$TEST_DIR"
+    exit 1
+fi
+
+echo ""
 echo "============="
 echo "All tests passed! ✓"
 echo ""
