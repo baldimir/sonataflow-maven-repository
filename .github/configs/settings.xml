@@ -17,7 +17,7 @@
         </repository>
         <repository>
           <id>github</id>
-          <url>https://maven.pkg.github.com/baldimir/sonataflow-maven-repository</url>
+          <url>${env.MAVEN_REPOSITORY_URL}</url>
           <snapshots>
             <enabled>true</enabled>
           </snapshots>
@@ -29,7 +29,7 @@
   <servers>
     <server>
       <id>github</id>
-      <username>baldimir</username>
+      <username>${env.GITHUB_USERNAME}</username>
       <password>${env.GITHUB_TOKEN}</password>
     </server>
   </servers>

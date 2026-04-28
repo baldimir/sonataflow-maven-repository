@@ -7,6 +7,25 @@ on:
         type: string
         required: false
         default: 111-SNAPSHOT
+      GITHUB_ORGANISATION:
+        description: "GitHub organisation that contains the SonataFlow repositories."
+        type: string
+        required: false
+        default: kiegroup
+      GITHUB_ORGANISATION_KIE_TOOLS:
+        description: "GitHub organisation that contains the SonataFlow kie-tools repository."
+        type: string
+        required: false
+        default: kubesmarts
+      MAVEN_REPOSITORY_URL:
+        description: "URL of the Maven repository where artifacts will be deployed."
+        type: string
+        required: false
+        default: https://maven.pkg.github.com/kubesmarts/sonataflow-maven-repository
+
+env:
+  MAVEN_REPOSITORY_URL: ${{ inputs.MAVEN_REPOSITORY_URL }}
+  GITHUB_USERNAME: ${{ inputs.GITHUB_ORGANISATION }}
 
 permissions:
   contents: read
@@ -28,47 +47,47 @@ jobs:
       - name: Checkout Drools
         uses: actions/checkout@v6
         with:
-          repository: baldimir/drools
+          repository: ${{ inputs.GITHUB_ORGANISATION }}/drools
           path: drools
           ref: main-kiegroup
 
-#      - name: Checkout kogito-runtimes
-#        uses: actions/checkout@v6
-#        with:
-#          repository: kiegroup/kogito-runtimes
-#          path: kogito-runtimes
-#
-#      - name: Checkout kogito-apps
-#        uses: actions/checkout@v6
-#        with:
-#          repository: kiegroup/kogito-apps
-#          path: kogito-apps
-#
+      - name: Checkout kogito-runtimes
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ inputs.GITHUB_ORGANISATION }}/kogito-runtimes
+          path: kogito-runtimes
+          ref: main-kiegroup
+
+      - name: Checkout kogito-apps
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ inputs.GITHUB_ORGANISATION }}/kogito-apps
+          path: kogito-apps
+          ref: main-kiegroup
+
 #      - name: Checkout kubesmarts/kie-tools
 #        uses: actions/checkout@v6
 #        with:
-#          repository: kiegroup/drools
+#          repository: ${{ inputs.GITHUB_ORGANISATION_KIE_TOOLS }}/kie-tools
 #          path: kie-tools
 
-      # TODO - this can be removed when the SNAPSHOT version is updated in the repositories.
       - name: Update Drools version and prepare repository
         run: |
-          python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
           ./productized/remove_modules.sh ./productized/modules
+          python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
         working-directory: drools
 
-#      # TODO - this can be removed when the SNAPSHOT version is updated in the repositories.
-#      - name: Update kogito-runtimes version
-#        run: |
-#          find ./ -name pom.xml -exec sed -i "s/999-SNAPSHOT/${SONATAFLOW_VERSION}/g" {} \;
-#        working-directory: kogito-runtimes
-#
-#
-#      # TODO - this can be removed when the SNAPSHOT version is updated in the repositories.
-#      - name: Update kogito-apps version
-#        run: |
-#          find ./ -name pom.xml -exec sed -i "s/999-SNAPSHOT/${SONATAFLOW_VERSION}/g" {} \;
-#        working-directory: kogito-apps
+      - name: Update kogito-runtimes version
+        run: |
+          ./productized/remove_modules.sh ./productized/modules
+          python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
+        working-directory: kogito-runtimes
+
+      - name: Update kogito-apps version
+        run: |
+          ./productized/remove_modules.sh ./productized/modules
+          python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
+        working-directory: kogito-apps
 
       - name: Build and publish Drools artifacts
         run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
@@ -76,17 +95,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-#      - name: Build and publish kogito-runtimes artifacts
-#        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/sonataflow-maven-repository
-#        working-directory: kogito-runtimes
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-#      - name: Build and publish kogito-apps artifacts
-#        run: mvn --batch-mode clean deploy -DskipTests -Dproductized -DaltDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/ -DaltSnapshotDeploymentRepository=id::default::https://maven.pkg.github.com/baldimir/sonataflow-maven-repository
-#        working-directory: kogito-apps
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish kogito-runtimes artifacts
+        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
+        working-directory: kogito-runtimes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish kogito-apps artifacts
+        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
+        working-directory: kogito-apps
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
       # TODO - add kie-tools
       # TODO - this probably needs a custom settings.xml until the repositories are not updated with new <repositories> configuration.
