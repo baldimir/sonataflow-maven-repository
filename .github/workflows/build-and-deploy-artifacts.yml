@@ -113,13 +113,13 @@ jobs:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish kogito-runtimes artifacts
-        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
+        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
         working-directory: kogito-runtimes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish kogito-apps artifacts
-        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
+        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
         working-directory: kogito-apps
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
