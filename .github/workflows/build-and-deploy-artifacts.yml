@@ -22,6 +22,12 @@ on:
         type: string
         required: false
         default: https://maven.pkg.github.com/kubesmarts/sonataflow-maven-repository
+# TODO - Implement optional tests execution
+#      RUN_TESTS:
+#        description: "If true, also tests will be run. "
+#        type: boolean
+#        required: false
+#        default: false
 
 env:
   MAVEN_REPOSITORY_URL: ${{ inputs.MAVEN_REPOSITORY_URL }}
