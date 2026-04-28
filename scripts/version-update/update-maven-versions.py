@@ -68,51 +68,46 @@ def update_pom_content(content: str, new_version: str, is_root_pom: bool = False
     in_dependency_mgmt = False
     in_plugins = False
     in_plugin_mgmt = False
-    after_project_artifact_id = False
-    project_level = 0
+    in_project = False
+    module_version_updated = False
 
     result_lines: list[str] = []
 
     for line in lines:
         original_line = line
 
+        # Track when we enter/exit the <project> tag
+        if "<project" in line:
+            in_project = True
+        elif "</project>" in line:
+            in_project = False
+
+        # Track when we enter/exit <parent> section
         if "<parent>" in line:
             in_parent = True
         elif "</parent>" in line:
             in_parent = False
 
-        if "<project" in line:
-            project_level += 1
-
-        if not in_parent and project_level > 0 and "<artifactId>" in line:
-            after_project_artifact_id = True
-
+        # Track when we enter/exit sections where we should NOT update versions
         if "<dependencies>" in line:
             in_dependencies = True
-            after_project_artifact_id = False
         elif "</dependencies>" in line:
             in_dependencies = False
 
         if "<dependencyManagement>" in line:
             in_dependency_mgmt = True
-            after_project_artifact_id = False
         elif "</dependencyManagement>" in line:
             in_dependency_mgmt = False
 
         if "<plugins>" in line:
             in_plugins = True
-            after_project_artifact_id = False
         elif "</plugins>" in line:
             in_plugins = False
 
         if "<pluginManagement>" in line:
             in_plugin_mgmt = True
-            after_project_artifact_id = False
         elif "</pluginManagement>" in line:
             in_plugin_mgmt = False
-
-        if any(tag in line for tag in RESET_TAGS):
-            after_project_artifact_id = False
 
         # Update parent version - replace ANY version (skip for root pom.xml)
         if in_parent and "<version>" in line and not is_root_pom:
@@ -125,9 +120,12 @@ def update_pom_content(content: str, new_version: str, is_root_pom: bool = False
                                    f"<version>{new_version}</version>")
                 if line != original_line:
                     changes_made += 1
-        # Update module version - replace ANY version
+        # Update module version - the first <version> tag directly inside <project>
+        # that is NOT in parent, dependencies, dependencyManagement, plugins, or pluginManagement
         elif (
-            after_project_artifact_id
+            in_project
+            and not module_version_updated
+            and not in_parent
             and not in_dependencies
             and not in_dependency_mgmt
             and not in_plugins
@@ -143,7 +141,7 @@ def update_pom_content(content: str, new_version: str, is_root_pom: bool = False
                                    f"<version>{new_version}</version>")
                 if line != original_line:
                     changes_made += 1
-            after_project_artifact_id = False
+                    module_version_updated = True
 
         result_lines.append(line)
 
