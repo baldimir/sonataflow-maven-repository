@@ -50,7 +50,17 @@ The script explicitly avoids updating versions in:
 python3 update-maven-versions.py NEW_VERSION
 ```
 
-### Example
+### With Exclusion Patterns
+
+```bash
+python3 update-maven-versions.py NEW_VERSION --exclude PATTERN [PATTERN ...]
+# or using short form
+python3 update-maven-versions.py NEW_VERSION -e PATTERN [PATTERN ...]
+```
+
+### Examples
+
+#### Example 1: Basic version update
 
 ```bash
 python3 update-maven-versions.py 1.0.0
@@ -62,13 +72,65 @@ This will:
 - Leave all dependency and plugin versions unchanged
 - Display a summary of updated files
 
-### Another Example
+#### Example 2: Update to SNAPSHOT version
 
 ```bash
 python3 update-maven-versions.py 9.105.0-SNAPSHOT
 ```
 
 This will update all module and parent versions to `9.105.0-SNAPSHOT`.
+
+#### Example 3: Exclude test directories
+
+```bash
+python3 update-maven-versions.py 1.0.0 --exclude "*/test/*"
+```
+
+This will update versions but skip any `pom.xml` files in directories containing "test" in their path.
+
+#### Example 4: Exclude multiple patterns
+
+```bash
+python3 update-maven-versions.py 1.0.0 --exclude "*/test/*" "productized/*" "*-examples/*"
+```
+
+This will skip:
+- Any files in test directories (`*/test/*`)
+- Any files in the productized directory (`productized/*`)
+- Any files in directories ending with `-examples` (`*-examples/*`)
+
+#### Example 5: Using short form
+
+```bash
+python3 update-maven-versions.py 1.0.0 -e "*/test/*" "productized/*"
+```
+
+Same as Example 4, but using the short `-e` flag instead of `--exclude`.
+
+### Exclusion Patterns
+
+The `--exclude` (or `-e`) parameter accepts glob-style wildcard patterns to skip specific `pom.xml` files:
+
+- **Patterns are matched against relative paths** from the current working directory
+- **Multiple patterns can be specified** by providing multiple arguments
+- **Common wildcards:**
+  - `*` - matches any characters within a path segment
+  - `*/` - matches any directory
+  - `**` - not needed (use `*/` for subdirectories)
+
+**Pattern Examples:**
+
+| Pattern | Matches | Example Files |
+|---------|---------|---------------|
+| `*/test/*` | Any file in a directory named "test" | `module/test/pom.xml`, `core/test/integration/pom.xml` |
+| `productized/*` | Any file directly under "productized" | `productized/pom.xml`, `productized/module/pom.xml` |
+| `*-examples/*` | Any file in directories ending with "-examples" | `drools-examples/pom.xml`, `kie-examples/submodule/pom.xml` |
+| `test-*/*` | Any file in directories starting with "test-" | `test-utils/pom.xml`, `test-integration/pom.xml` |
+
+**When a file is excluded:**
+- It will be listed in the "Skipping excluded file(s)" section
+- It will not be processed or modified
+- The summary will show the count of excluded files
 
 ### Running Tests
 
@@ -78,12 +140,13 @@ Before using the script on your project, you can verify it works correctly:
 ./test-version-update.sh
 ```
 
-This creates a test `pom.xml`, runs the update logic, and verifies that:
+This creates test `pom.xml` files, runs the update logic, and verifies that:
 - Parent version is updated ✓
 - Module version is updated ✓
 - Dependency versions are NOT updated ✓
 - DependencyManagement versions are NOT updated ✓
 - Plugin versions are NOT updated ✓
+- Exclusion patterns work correctly ✓
 
 ## Examples
 
@@ -204,6 +267,7 @@ The Python script parses each `pom.xml` file line by line and tracks the XML str
 This means no `pom.xml` files have module or parent version tags to update. Possible reasons:
 - Files don't have a `<version>` tag (they might inherit from parent)
 - Files have the version in a different location (e.g., only in properties)
+- All files are excluded by exclusion patterns
 
 ### Some files not updated
 
@@ -211,6 +275,15 @@ Check if those files:
 - Don't have a `<version>` tag (they inherit from parent)
 - Have the version in a different location (e.g., only in properties)
 - Are in excluded sections (dependencies, plugins, etc.)
+- Match an exclusion pattern (check the "Skipping excluded file(s)" section in output)
+
+### Exclusion pattern not working
+
+Make sure:
+- Patterns use forward slashes (`/`) even on Windows
+- Patterns are relative to the current working directory
+- Wildcards are used correctly (e.g., `*/test/*` not `**/test/**`)
+- Pattern is quoted to prevent shell expansion: `"*/test/*"`
 
 ### Want to see what will change?
 
@@ -218,6 +291,8 @@ Run the test script first to see the exact behavior:
 ```bash
 ./test-version-update.sh
 ```
+
+This will test basic functionality and exclusion patterns.
 
 ## Platform Compatibility
 

@@ -221,6 +221,153 @@ else
 fi
 
 echo ""
+echo "=========================================="
+echo "Test 3: Exclusion patterns"
+echo "=========================================="
+echo ""
+
+# Create additional test directories and pom.xml files
+mkdir -p "$TEST_DIR/test-module"
+mkdir -p "$TEST_DIR/drools-examples"
+mkdir -p "$TEST_DIR/productized"
+mkdir -p "$TEST_DIR/normal-module"
+
+# Create test pom.xml files
+cat > "$TEST_DIR/test-module/pom.xml" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>drools-parent</artifactId>
+    <version>9.104.0</version>
+  </parent>
+
+  <artifactId>test-module</artifactId>
+  <version>9.104.0</version>
+</project>
+EOF
+
+cat > "$TEST_DIR/drools-examples/pom.xml" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>drools-parent</artifactId>
+    <version>9.104.0</version>
+  </parent>
+
+  <artifactId>drools-examples</artifactId>
+  <version>9.104.0</version>
+</project>
+EOF
+
+cat > "$TEST_DIR/productized/pom.xml" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>drools-parent</artifactId>
+    <version>9.104.0</version>
+  </parent>
+
+  <artifactId>productized-module</artifactId>
+  <version>9.104.0</version>
+</project>
+EOF
+
+cat > "$TEST_DIR/normal-module/pom.xml" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>drools-parent</artifactId>
+    <version>9.104.0</version>
+  </parent>
+
+  <artifactId>normal-module</artifactId>
+  <version>9.104.0</version>
+</project>
+EOF
+
+echo "Test pom.xml files created in test-module, drools-examples, productized, and normal-module directories."
+echo ""
+
+# Run the version update with exclusion patterns
+echo "Running version update with exclusions: test-module/* *-examples/* productized/*"
+echo ""
+
+(
+    cd "$TEST_DIR" &&
+    python3 ../update-maven-versions.py 9.105.0-SNAPSHOT --exclude "test-module/*" "*-examples/*" "productized/*"
+)
+
+echo ""
+echo "Verification:"
+echo "============="
+
+# Check that test-module was NOT updated
+if grep -q '9.104.0' "$TEST_DIR/test-module/pom.xml"; then
+    echo "✓ test-module/pom.xml NOT updated (correctly excluded by 'test-module/*')"
+else
+    echo "✗ FAILED: test-module/pom.xml was incorrectly updated"
+    rm -rf "$TEST_DIR"
+    exit 1
+fi
+
+# Check that drools-examples was NOT updated
+if grep -q '9.104.0' "$TEST_DIR/drools-examples/pom.xml"; then
+    echo "✓ drools-examples/pom.xml NOT updated (correctly excluded by '*-examples/*')"
+else
+    echo "✗ FAILED: drools-examples/pom.xml was incorrectly updated"
+    rm -rf "$TEST_DIR"
+    exit 1
+fi
+
+# Check that productized was NOT updated
+if grep -q '9.104.0' "$TEST_DIR/productized/pom.xml"; then
+    echo "✓ productized/pom.xml NOT updated (correctly excluded by 'productized/*')"
+else
+    echo "✗ FAILED: productized/pom.xml was incorrectly updated"
+    rm -rf "$TEST_DIR"
+    exit 1
+fi
+
+# Check that normal-module WAS updated (not excluded)
+if grep -q '9.105.0-SNAPSHOT' "$TEST_DIR/normal-module/pom.xml"; then
+    echo "✓ normal-module/pom.xml WAS updated (not excluded)"
+else
+    echo "✗ FAILED: normal-module/pom.xml was not updated"
+    rm -rf "$TEST_DIR"
+    exit 1
+fi
+
+# Check that submodule WAS updated (not excluded)
+if grep -q '9.105.0-SNAPSHOT' "$TEST_DIR/submodule/pom.xml"; then
+    echo "✓ submodule/pom.xml WAS updated (not excluded)"
+else
+    echo "✗ FAILED: submodule/pom.xml was not updated"
+    rm -rf "$TEST_DIR"
+    exit 1
+fi
+
+# Check that root pom.xml WAS updated (not excluded)
+if grep -A 1 '<artifactId>drools-parent</artifactId>' "$TEST_DIR/pom.xml" | grep -q '9.105.0-SNAPSHOT'; then
+    echo "✓ Root pom.xml WAS updated (not excluded)"
+else
+    echo "✗ FAILED: Root pom.xml was not updated"
+    rm -rf "$TEST_DIR"
+    exit 1
+fi
+
+echo ""
 echo "============="
 echo "All tests passed! ✓"
 echo ""

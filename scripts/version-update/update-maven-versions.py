@@ -22,6 +22,7 @@ plugins, or pluginManagement sections.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import os
 import sys
 from pathlib import Path
@@ -47,6 +48,18 @@ def parse_args() -> argparse.Namespace:
         )
     )
     parser.add_argument("new_version", help="New version to set")
+    parser.add_argument(
+        "-e",
+        "--exclude",
+        nargs="*",
+        default=[],
+        metavar="PATTERN",
+        help=(
+            "Exclude pom.xml files matching these glob patterns. "
+            "Patterns are matched against relative paths from the current directory. "
+            "Examples: '*/test/*', 'productized/*', '*-examples/*'"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -55,8 +68,57 @@ def validate_args(new_version: str) -> None:
         raise ValueError("NEW_VERSION must not be empty")
 
 
-def find_pom_files(root: Path) -> list[Path]:
-    return sorted(path for path in root.rglob("pom.xml") if path.is_file())
+def is_excluded(path: Path, root: Path, exclude_patterns: list[str]) -> bool:
+    """Check if a path matches any exclusion pattern.
+    
+    Args:
+        path: The file path to check
+        root: The root directory (for computing relative path)
+        exclude_patterns: List of glob patterns to match against
+        
+    Returns:
+        True if the path matches any exclusion pattern, False otherwise
+    """
+    if not exclude_patterns:
+        return False
+    
+    # Get relative path from root for pattern matching
+    try:
+        relative_path = path.relative_to(root)
+    except ValueError:
+        # Path is not relative to root, don't exclude
+        return False
+    
+    # Convert to string with forward slashes for consistent pattern matching
+    relative_path_str = str(relative_path).replace(os.sep, "/")
+    
+    # Check against each pattern
+    for pattern in exclude_patterns:
+        if fnmatch.fnmatch(relative_path_str, pattern):
+            return True
+    
+    return False
+
+
+def find_pom_files(root: Path, exclude_patterns: list[str] | None = None) -> list[Path]:
+    """Find all pom.xml files, excluding those matching exclusion patterns.
+    
+    Args:
+        root: Root directory to search from
+        exclude_patterns: Optional list of glob patterns to exclude
+        
+    Returns:
+        Sorted list of pom.xml file paths
+    """
+    if exclude_patterns is None:
+        exclude_patterns = []
+    
+    all_poms = (path for path in root.rglob("pom.xml") if path.is_file())
+    filtered_poms = [
+        path for path in all_poms
+        if not is_excluded(path, root, exclude_patterns)
+    ]
+    return sorted(filtered_poms)
 
 
 def update_pom_content(content: str, new_version: str, is_root_pom: bool = False) -> tuple[str, int]:
@@ -183,14 +245,37 @@ def main() -> int:
         return 2
 
     root = Path.cwd()
-    pom_files = find_pom_files(root)
+    
+    # Find all pom.xml files first (before filtering)
+    all_pom_files = sorted(path for path in root.rglob("pom.xml") if path.is_file())
+    
+    # Apply exclusion patterns
+    pom_files = find_pom_files(root, args.exclude)
+    
+    # Calculate excluded files
+    excluded_files = len(all_pom_files) - len(pom_files)
 
-    if not pom_files:
+    if not pom_files and not all_pom_files:
         print("No pom.xml files found.")
         return 1
 
     print(f"Updating Maven versions to {args.new_version}")
+    if args.exclude:
+        print(f"Exclusion patterns: {', '.join(args.exclude)}")
     print("==================================================")
+    
+    # Show excluded files if any
+    if excluded_files > 0:
+        print(f"\nSkipping {excluded_files} excluded file(s):")
+        for pom_file in all_pom_files:
+            if is_excluded(pom_file, root, args.exclude):
+                relative_path = pom_file.relative_to(root)
+                print(f"  ⊘ Skipped: {relative_path} (matches exclusion pattern)")
+        print()
+
+    if not pom_files:
+        print("No pom.xml files to update after applying exclusions.")
+        return 0
 
     total_files = 0
     updated_files = 0
@@ -213,7 +298,10 @@ def main() -> int:
 
     print("==================================================")
     print("Summary:")
-    print(f"  Total pom.xml files: {total_files}")
+    print(f"  Total pom.xml files found: {len(all_pom_files)}")
+    if excluded_files > 0:
+        print(f"  Excluded files: {excluded_files}")
+    print(f"  Processed files: {total_files}")
     print(f"  Updated files: {updated_files}")
     print(f"  Unchanged files: {total_files - updated_files}")
     print("")

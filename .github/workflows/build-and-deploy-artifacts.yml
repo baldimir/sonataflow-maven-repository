@@ -86,7 +86,7 @@ jobs:
       - name: Update Drools version and prepare repository
         run: |
           ./productized/remove_modules.sh ./productized/modules
-          python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
+          python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }} --exclude "*/kie-ci-test-jars/*"
         working-directory: drools
 
       - name: Update kogito-runtimes version
