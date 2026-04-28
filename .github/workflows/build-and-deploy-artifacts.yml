@@ -76,12 +76,12 @@ jobs:
           path: kogito-apps
           ref: ${{ inputs.BRANCH_TO_BUILD }}
 
-#      - name: Checkout kubesmarts/kie-tools
-#        uses: actions/checkout@v6
-#        with:
-#          repository: ${{ inputs.GITHUB_ORGANISATION_KIE_TOOLS }}/kie-tools
-#          path: kie-tools
-#          ref: ${{ inputs.BRANCH_TO_BUILD }}
+      - name: Checkout kubesmarts/kie-tools
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ inputs.GITHUB_ORGANISATION_KIE_TOOLS }}/kie-tools
+          path: kie-tools
+          ref: ${{ inputs.BRANCH_TO_BUILD }}
 
       - name: Update Drools version and prepare repository
         run: |
@@ -101,6 +101,11 @@ jobs:
           python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
         working-directory: kogito-apps
 
+      - name: Update kie-tools version and prepare repository
+        run: |
+          python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
+        working-directory: kie-tools
+
       - name: Build and publish Drools artifacts
         run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
         working-directory: drools
@@ -119,6 +124,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
-      # TODO - add kie-tools
-      # TODO - this probably needs a custom settings.xml until the repositories are not updated with new <repositories> configuration.
+      # TODO - add kie-tools - finish this
+      - name: Build and publish kie-tools artifacts
+        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Drevision=${{ inputs.SONATAFLOW_VERSION }} -Dversion.org.kie.kogito=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
+        working-directory: kie-tools
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
