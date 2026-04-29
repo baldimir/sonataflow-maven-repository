@@ -50,6 +50,15 @@ def parse_args() -> argparse.Namespace:
             "Examples: '*/test/*', 'productized/*', '*-examples/*'"
         ),
     )
+    parser.add_argument(
+        "--update-root-parent",
+        "--urp",
+        action="store_true",
+        help=(
+            "Enable updating parent version in root pom.xml. "
+            "By default, root pom.xml parent version is NOT updated (common for external parents)."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -111,7 +120,7 @@ def find_pom_files(root: Path, exclude_patterns: list[str] | None = None) -> lis
     return sorted(filtered_poms)
 
 
-def update_pom_content(content: str, new_version: str, is_root_pom: bool = False) -> tuple[str, int]:
+def update_pom_content(content: str, new_version: str, is_root_pom: bool = False, update_root_parent: bool = False) -> tuple[str, int]:
     lines = content.splitlines(keepends=True)
 
     changes_made = 0
@@ -167,8 +176,9 @@ def update_pom_content(content: str, new_version: str, is_root_pom: bool = False
         elif "</build>" in line:
             in_build = False
 
-        # Update parent version - replace ANY version (skip for root pom.xml)
-        if in_parent and "<version>" in line and not is_root_pom:
+        # Update parent version - replace ANY version
+        # Skip for root pom.xml UNLESS update_root_parent flag is True
+        if in_parent and "<version>" in line and (not is_root_pom or update_root_parent):
             # Extract the version value and replace it, preserving formatting
             match = re.search(r'<version>([^<]+)</version>', line)
             if match:
@@ -205,12 +215,12 @@ def update_pom_content(content: str, new_version: str, is_root_pom: bool = False
     return "".join(result_lines), changes_made
 
 
-def update_pom_file(path: Path, new_version: str, root_dir: Path) -> int:
+def update_pom_file(path: Path, new_version: str, root_dir: Path, update_root_parent: bool = False) -> int:
     # Check if this is the root pom.xml (in the same directory as where script is executed)
     is_root_pom = path.parent == root_dir
     
     original_content = path.read_text(encoding="utf-8")
-    updated_content, changes_made = update_pom_content(original_content, new_version, is_root_pom)
+    updated_content, changes_made = update_pom_content(original_content, new_version, is_root_pom, update_root_parent)
 
     if changes_made == 0:
         return 0
@@ -278,7 +288,7 @@ def main() -> int:
     for pom_file in pom_files:
         total_files += 1
         try:
-            changes_made = update_pom_file(pom_file, args.new_version, root)
+            changes_made = update_pom_file(pom_file, args.new_version, root, args.update_root_parent)
         except OSError as exc:
             print(f"✗ Failed: {pom_file} ({exc})", file=sys.stderr)
             return 1
@@ -287,7 +297,10 @@ def main() -> int:
             updated_files += 1
             # Add note if this is the root pom.xml
             if pom_file.parent == root:
-                print(f"✓ Updated: {pom_file} (root pom - parent version NOT updated)")
+                if args.update_root_parent:
+                    print(f"✓ Updated: {pom_file} (root pom - parent version UPDATED)")
+                else:
+                    print(f"✓ Updated: {pom_file} (root pom - parent version NOT updated)")
             else:
                 print(f"✓ Updated: {pom_file}")
 

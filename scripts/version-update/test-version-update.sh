@@ -497,12 +497,158 @@ else
 fi
 
 echo ""
+echo "=========================================="
+echo "Test 5: Root pom.xml with --update-root-parent flag"
+echo "=========================================="
+echo ""
+
+# Create a fresh test directory for this test
+TEST_DIR_5="test-version-update-temp-5"
+mkdir -p "$TEST_DIR_5"
+
+# Create a root pom.xml with external parent
+cat > "$TEST_DIR_5/pom.xml" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.2.0</version>
+  </parent>
+
+  <groupId>org.kie</groupId>
+  <artifactId>drools-parent</artifactId>
+  <version>9.104.0</version>
+  <packaging>pom</packaging>
+
+  <name>Drools :: Parent</name>
+</project>
+EOF
+
+echo "Root pom.xml created for --update-root-parent test."
+echo ""
+echo "Original content:"
+echo "=================="
+cat "$TEST_DIR_5/pom.xml"
+echo ""
+echo "=================="
+echo ""
+
+# Run the version update WITH --update-root-parent flag
+echo "Running version update to: 9.105.0-SNAPSHOT --update-root-parent"
+echo ""
+
+(
+    cd "$TEST_DIR_5" &&
+    python3 ../update-maven-versions.py 9.105.0-SNAPSHOT --update-root-parent
+)
+
+echo ""
+echo "Updated content:"
+echo "=================="
+cat "$TEST_DIR_5/pom.xml"
+echo ""
+echo "=================="
+echo ""
+
+# Verify the results for root pom.xml with flag
+echo "Verification:"
+echo "============="
+
+# Check parent version WAS updated (flag enabled)
+if grep -A 3 '<parent>' "$TEST_DIR_5/pom.xml" | grep -q '9.105.0-SNAPSHOT'; then
+    echo "✓ Root pom.xml parent version UPDATED (correct - flag enabled)"
+else
+    echo "✗ FAILED: Root pom.xml parent version was not updated with --update-root-parent flag"
+    rm -rf "$TEST_DIR_5"
+    exit 1
+fi
+
+# Check module version WAS updated
+if grep -A 1 '<artifactId>drools-parent</artifactId>' "$TEST_DIR_5/pom.xml" | grep -q '9.105.0-SNAPSHOT'; then
+    echo "✓ Root pom.xml module version updated correctly"
+else
+    echo "✗ FAILED: Root pom.xml module version not updated"
+    rm -rf "$TEST_DIR_5"
+    exit 1
+fi
+
+echo ""
+echo "=========================================="
+echo "Test 6: Root pom.xml with --urp short flag"
+echo "=========================================="
+echo ""
+
+# Create another fresh test directory for short flag test
+TEST_DIR_6="test-version-update-temp-6"
+mkdir -p "$TEST_DIR_6"
+
+# Create a root pom.xml with external parent
+cat > "$TEST_DIR_6/pom.xml" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.2.0</version>
+  </parent>
+
+  <groupId>org.kie</groupId>
+  <artifactId>drools-parent</artifactId>
+  <version>9.104.0</version>
+  <packaging>pom</packaging>
+
+  <name>Drools :: Parent</name>
+</project>
+EOF
+
+echo "Root pom.xml created for --urp short flag test."
+echo ""
+
+# Run the version update WITH --urp short flag
+echo "Running version update to: 9.106.0-SNAPSHOT --urp"
+echo ""
+
+(
+    cd "$TEST_DIR_6" &&
+    python3 ../update-maven-versions.py 9.106.0-SNAPSHOT --urp
+)
+
+echo ""
+echo "Verification:"
+echo "============="
+
+# Check parent version WAS updated (short flag enabled)
+if grep -A 3 '<parent>' "$TEST_DIR_6/pom.xml" | grep -q '9.106.0-SNAPSHOT'; then
+    echo "✓ Root pom.xml parent version UPDATED (correct - --urp flag enabled)"
+else
+    echo "✗ FAILED: Root pom.xml parent version was not updated with --urp flag"
+    rm -rf "$TEST_DIR_6"
+    exit 1
+fi
+
+# Check module version WAS updated
+if grep -A 1 '<artifactId>drools-parent</artifactId>' "$TEST_DIR_6/pom.xml" | grep -q '9.106.0-SNAPSHOT'; then
+    echo "✓ Root pom.xml module version updated correctly"
+else
+    echo "✗ FAILED: Root pom.xml module version not updated"
+    rm -rf "$TEST_DIR_6"
+    exit 1
+fi
+
+echo ""
 echo "============="
 echo "All tests passed! ✓"
 echo ""
 
 # Cleanup
 rm -rf "$TEST_DIR"
-echo "Test directory cleaned up."
+rm -rf "$TEST_DIR_5"
+rm -rf "$TEST_DIR_6"
+echo "Test directories cleaned up."
 
 # Made with Bob

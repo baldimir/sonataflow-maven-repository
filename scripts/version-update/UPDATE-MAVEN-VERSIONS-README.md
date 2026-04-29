@@ -50,12 +50,28 @@ The script explicitly avoids updating versions in:
 python3 update-maven-versions.py NEW_VERSION
 ```
 
+### With Root Parent Update
+
+```bash
+python3 update-maven-versions.py NEW_VERSION --update-root-parent
+# or using short form
+python3 update-maven-versions.py NEW_VERSION --urp
+```
+
 ### With Exclusion Patterns
 
 ```bash
 python3 update-maven-versions.py NEW_VERSION --exclude PATTERN [PATTERN ...]
 # or using short form
 python3 update-maven-versions.py NEW_VERSION -e PATTERN [PATTERN ...]
+```
+
+### Combined Options
+
+```bash
+python3 update-maven-versions.py NEW_VERSION --update-root-parent --exclude "*/test/*"
+# or using short forms
+python3 update-maven-versions.py NEW_VERSION --urp -e "*/test/*"
 ```
 
 ### Examples
@@ -80,7 +96,23 @@ python3 update-maven-versions.py 9.105.0-SNAPSHOT
 
 This will update all module and parent versions to `9.105.0-SNAPSHOT`.
 
-#### Example 3: Exclude test directories
+#### Example 3: Update root parent version
+
+```bash
+python3 update-maven-versions.py 1.0.0 --update-root-parent
+```
+
+This will update all module and parent versions to `1.0.0`, **including** the parent version in the root pom.xml. Use this when your root pom.xml parent should be updated along with the project version.
+
+#### Example 4: Update root parent using short flag
+
+```bash
+python3 update-maven-versions.py 1.0.0 --urp
+```
+
+Same as Example 3, but using the short form `--urp` instead of `--update-root-parent`.
+
+#### Example 5: Exclude test directories
 
 ```bash
 python3 update-maven-versions.py 1.0.0 --exclude "*/test/*"
@@ -88,7 +120,7 @@ python3 update-maven-versions.py 1.0.0 --exclude "*/test/*"
 
 This will update versions but skip any `pom.xml` files in directories containing "test" in their path.
 
-#### Example 4: Exclude multiple patterns
+#### Example 6: Exclude multiple patterns
 
 ```bash
 python3 update-maven-versions.py 1.0.0 --exclude "*/test/*" "productized/*" "*-examples/*"
@@ -99,13 +131,35 @@ This will skip:
 - Any files in the productized directory (`productized/*`)
 - Any files in directories ending with `-examples` (`*-examples/*`)
 
-#### Example 5: Using short form
+#### Example 7: Using short form
 
 ```bash
 python3 update-maven-versions.py 1.0.0 -e "*/test/*" "productized/*"
 ```
 
-Same as Example 4, but using the short `-e` flag instead of `--exclude`.
+Same as Example 6, but using the short `-e` flag instead of `--exclude`.
+
+#### Example 8: Combined options
+
+```bash
+python3 update-maven-versions.py 1.0.0 --update-root-parent --exclude "*/test/*"
+```
+
+This will update all versions to `1.0.0`, including the root pom.xml parent version, but skip any files in test directories.
+
+### Root Parent Update Flag
+
+The `--update-root-parent` (or `--urp`) flag controls whether the parent version in the root pom.xml is updated:
+
+- **Default behavior (flag NOT provided)**: Root pom.xml parent version is NOT updated
+  - This is the common pattern when the root pom.xml references an external parent (e.g., Spring Boot parent, corporate parent POM)
+  - Only the root pom.xml module version is updated
+  
+- **With flag (--update-root-parent or --urp)**: Root pom.xml parent version IS updated
+  - Use this when your root pom.xml parent should be updated along with the project version
+  - Both module version AND parent version in root pom.xml are updated
+
+**Note**: This flag only affects the root pom.xml. All subdirectory pom.xml files always have both module and parent versions updated regardless of this flag.
 
 ### Exclusion Patterns
 
@@ -147,6 +201,7 @@ This creates test `pom.xml` files, runs the update logic, and verifies that:
 - DependencyManagement versions are NOT updated ✓
 - Plugin versions are NOT updated ✓
 - Exclusion patterns work correctly ✓
+- Root parent update flag works correctly ✓
 
 ## Examples
 
