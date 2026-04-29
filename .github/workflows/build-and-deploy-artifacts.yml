@@ -93,6 +93,10 @@ jobs:
         run: |
           ./productized/remove_modules.sh ./productized/modules
           python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
+#           TODO - custom fix until we have it fixed in the kogito-runtimes repository
+#                  This hardcoded version still remains in the built and deployed pom.xml even if we define the property on runtime,
+#                  so it is incorrectly resolving 999-SNAPSHOT artifacts when used.
+          sed -i 's|<version\.org\.kie>999-SNAPSHOT</version\.org\.kie>|<version.org.kie>${project.version}</version.org.kie>|g' ./kogito-build/kogito-kie-bom/pom.xml
         working-directory: kogito-runtimes
 
       - name: Update kogito-apps version
@@ -112,11 +116,11 @@ jobs:
 #        env:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-#      - name: Build and publish kogito-runtimes artifacts
-#        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
-#        working-directory: kogito-runtimes
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish kogito-runtimes artifacts
+        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
+        working-directory: kogito-runtimes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish kogito-apps artifacts
         run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
