@@ -113,7 +113,7 @@ jobs:
 
       - name: Update kie-tools maven-base
         run: |
-          python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
+          python3 ../../../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
           sed -i 's|<version\.org\.kie\.kogito>.*</version\.org\.kie\.kogito>|<version.org.kie.kogito>${project.version}</version.org.kie.kogito>|g' ./pom.xml
         working-directory: kie-tools/packages/maven-base
 
