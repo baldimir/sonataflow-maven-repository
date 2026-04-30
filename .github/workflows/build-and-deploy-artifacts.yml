@@ -141,3 +141,4 @@ jobs:
         working-directory: kie-tools
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAVEN_ARGS: -Dmaven.repo.local=~/.m2 --settings=../.github/configs/settings.xml -Drevision=${{ inputs.SONATAFLOW_VERSION }}
