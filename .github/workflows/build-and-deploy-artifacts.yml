@@ -108,8 +108,14 @@ jobs:
 
       - name: Update kie-tools version and prepare repository
         run: |
-          python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
+          python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }} --exclude "*/maven-base/*"
         working-directory: kie-tools
+
+      - name: Update kie-tools maven-base
+        run: |
+          python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
+          sed -i 's|<version\.org\.kie\.kogito>.*</version\.org\.kie\.kogito>|<version.org.kie.kogito>${project.version}</version.org.kie.kogito>|g' ./pom.xml
+        working-directory: kie-tools/packages/maven-base
 
 #      - name: Build and publish Drools artifacts
 #        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
@@ -117,17 +123,17 @@ jobs:
 #        env:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and publish kogito-runtimes artifacts
-        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
-        working-directory: kogito-runtimes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Build and publish kogito-runtimes artifacts
+#        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
+#        working-directory: kogito-runtimes
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and publish kogito-apps artifacts
-        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
-        working-directory: kogito-apps
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Build and publish kogito-apps artifacts
+#        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
+#        working-directory: kogito-apps
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # TODO - add kie-tools - finish this
       - name: Build and publish kie-tools artifacts
