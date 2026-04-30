@@ -137,8 +137,9 @@ jobs:
 
       # TODO - add kie-tools - finish this
       - name: Build and publish kie-tools artifacts
-        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Drevision=${{ inputs.SONATAFLOW_VERSION }} -Dversion.org.kie.kogito=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
+
+        run: mvn --batch-mode clean deploy -s ./home/runner/work/sonataflow-maven-repository/sonataflow-maven-repository/kie-tools/.github/configs/settings.xml -DskipTests -Drevision=${{ inputs.SONATAFLOW_VERSION }} -Dversion.org.kie.kogito=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
         working-directory: kie-tools
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MAVEN_ARGS: -Dmaven.repo.local=~/.m2 --settings=../.github/configs/settings.xml -Drevision=${{ inputs.SONATAFLOW_VERSION }}
+          MAVEN_ARGS: -Dmaven.repo.local=~/.m2 --settings=/home/runner/work/sonataflow-maven-repository/sonataflow-maven-repository/kie-tools/.github/configs/settings.xml -Drevision=${{ inputs.SONATAFLOW_VERSION }}
