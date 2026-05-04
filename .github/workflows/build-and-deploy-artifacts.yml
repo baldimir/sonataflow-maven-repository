@@ -85,24 +85,16 @@ jobs:
 
       - name: Update Drools version and prepare repository
         run: |
-          ./productized/remove_modules.sh ./productized/modules
           python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }} --exclude "*/kie-ci-test-jars/*"
         working-directory: drools
 
-
-#           TODO - Contains custom fix for hardcoded snapshot version until we have it fixed in the kogito-runtimes repository
-#                  This hardcoded version still remains in the built and deployed pom.xml even if we define the property on runtime,
-#                  so it is incorrectly resolving 999-SNAPSHOT artifacts when used.
       - name: Update kogito-runtimes version
         run: |
-          ./productized/remove_modules.sh ./productized/modules
           python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }}
-          sed -i 's|<version\.org\.kie>999-SNAPSHOT</version\.org\.kie>|<version.org.kie>${project.version}</version.org.kie>|g' ./kogito-build/kogito-kie-bom/pom.xml
         working-directory: kogito-runtimes
 
       - name: Update kogito-apps version
         run: |
-          ./productized/remove_modules.sh ./productized/modules
           python3 ../scripts/version-update/update-maven-versions.py ${{ inputs.SONATAFLOW_VERSION }} --update-root-parent
         working-directory: kogito-apps
 
@@ -117,23 +109,23 @@ jobs:
           sed -i 's|<version\.org\.kie\.kogito>.*</version\.org\.kie\.kogito>|<version.org.kie.kogito>${project.version}</version.org.kie.kogito>|g' ./pom.xml
         working-directory: kie-tools/packages/maven-base
 
-#      - name: Build and publish Drools artifacts
-#        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
-#        working-directory: drools
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish Drools artifacts
+        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dproductized
+        working-directory: drools
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-#      - name: Build and publish kogito-runtimes artifacts
-#        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
-#        working-directory: kogito-runtimes
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish kogito-runtimes artifacts
+        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
+        working-directory: kogito-runtimes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-#      - name: Build and publish kogito-apps artifacts
-#        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
-#        working-directory: kogito-apps
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish kogito-apps artifacts
+        run: mvn --batch-mode clean deploy -s ../.github/configs/settings.xml -DskipTests -Dversion.org.kie=${{ inputs.SONATAFLOW_VERSION }} -Dproductized
+        working-directory: kogito-apps
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish kie-tools artifacts
         run: mvn --batch-mode clean deploy -s ${{ github.workspace }}/.github/configs/settings.xml -DskipTests -Drevision=${{ inputs.SONATAFLOW_VERSION }} -Dversion.org.kie.kogito=${{ inputs.SONATAFLOW_VERSION }} -Dproductized -Dskip.maven.deploy.in.pnpm.wrapped.artifacts=false
@@ -144,7 +136,7 @@ jobs:
           KIE_TOOLS_BUILD__mavenDeploySkip: false
           DROOLS_AND_KOGITO__skip: true
           KIE_TOOLS_BUILD__runTests: false
-          KIE_TOOLS_BUILD__runEndToEndTests: false
+          KIE_TOOLS_BUILD__runEndToEndTests: false`
           KIE_TOOLS_BUILD__buildContainerImages: false
           KIE_TOOLS_BUILD__containerizedEndToEndTests: false
           KIE_TOOLS_BUILD__ignoreTestFailures: true
